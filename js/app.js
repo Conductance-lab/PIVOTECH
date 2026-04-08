@@ -250,7 +250,6 @@ function wireSerial() {
   };
 
   Serial.cb.onVerified = (info) => {
-    state_verified = true;
     setConnBadge('verified', '已验证');
     setVerifyBanner('ok', '设备验证成功 ✓',
       `识别到 PIVOTECH 设备：${info.slice(0, 80)}`);
