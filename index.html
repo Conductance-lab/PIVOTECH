@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PIVOTECH — 嵌入式通用快速调试检测器</title>
+  <meta name="description" content="Universal Fast Debug Detector for Embedded Systems — Web Serial API" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+  <a class="logo" href="#">
+    <div class="logo-icon">PT</div>
+    <div class="logo-text">
+      <span class="logo-title">PIVOTECH</span>
+      <span class="logo-sub">嵌入式通用快速调试检测器</span>
+    </div>
+  </a>
+  <div class="header-right">
+    <div class="conn-badge" id="conn-badge">
+      <span class="dot"></span>
+      <span id="conn-status-text">未连接</span>
+    </div>
+    <a class="btn btn-ghost btn-sm"
+       href="https://github.com/Conductance-lab/PIVOTECH"
+       target="_blank" rel="noopener">
+      <!-- GitHub icon -->
+      <svg viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+          0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+          -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+          .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+          -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0
+          1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82
+          1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01
+          1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+      GitHub
+    </a>
+  </div>
+</header>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav>
+  <button class="nav-tab active" data-tab="terminal">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="1" y="2" width="14" height="12" rx="2"/>
+      <polyline points="4,6 7,8 4,10"/>
+      <line x1="8" y1="10" x2="12" y2="10"/>
+    </svg>
+    串口终端
+  </button>
+  <button class="nav-tab" data-tab="params">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="8" cy="8" r="2"/>
+      <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41
+               M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
+    </svg>
+    参数控制
+  </button>
+  <button class="nav-tab" data-tab="firmware">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M8 1v9M5 7l3 3 3-3"/>
+      <path d="M2 12v2a1 1 0 001 1h10a1 1 0 001-1v-2"/>
+    </svg>
+    固件下载
+  </button>
+  <button class="nav-tab" data-tab="about">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="8" cy="8" r="7"/>
+      <line x1="8" y1="7" x2="8" y2="11"/>
+      <circle cx="8" cy="5" r=".5" fill="currentColor"/>
+    </svg>
+    关于
+  </button>
+</nav>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main>
+
+  <!-- ── TAB: 串口终端 ── -->
+  <div class="tab-pane active" id="tab-terminal">
+
+    <!-- Connection card -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M1 8h14M8 1v14"/>
+          </svg>
+          串口连接
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="conn-panel">
+          <div class="fg">
+            <label class="flabel" for="baud-rate">波特率</label>
+            <select id="baud-rate">
+              <option value="1200">1200</option>
+              <option value="2400">2400</option>
+              <option value="4800">4800</option>
+              <option value="9600">9600</option>
+              <option value="19200">19200</option>
+              <option value="38400">38400</option>
+              <option value="57600">57600</option>
+              <option value="115200" selected>115200</option>
+              <option value="230400">230400</option>
+              <option value="460800">460800</option>
+              <option value="921600">921600</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel" for="data-bits">数据位</label>
+            <select id="data-bits">
+              <option value="7">7</option>
+              <option value="8" selected>8</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel" for="stop-bits">停止位</label>
+            <select id="stop-bits">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flabel" for="parity">校验位</label>
+            <select id="parity">
+              <option value="none" selected>None</option>
+              <option value="even">Even</option>
+              <option value="odd">Odd</option>
+            </select>
+          </div>
+          <div class="fg" style="align-self:end;display:flex;gap:6px">
+            <button class="btn btn-success" id="btn-connect">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M5 8h6M8 5v6"/>
+              </svg>
+              连接串口
+            </button>
+            <button class="btn btn-danger" id="btn-disconnect" disabled>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+                <line x1="4" y1="4" x2="12" y2="12"/>
+                <line x1="12" y1="4" x2="4" y2="12"/>
+              </svg>
+              断开
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Device verification card -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M13 5l-6 6-3-3"/>
+            <circle cx="8" cy="8" r="7"/>
+          </svg>
+          设备验证
+        </span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div class="fg" style="display:flex;gap:6px;align-items:center">
+            <label class="flabel" style="white-space:nowrap">握手命令</label>
+            <input type="text" id="hs-cmd" value="PIVOTECH_ID\r\n" style="width:160px;font-family:var(--font-mono);font-size:12px" />
+            <label class="flabel" style="white-space:nowrap">期望响应含</label>
+            <input type="text" id="hs-token" value="PIVOTECH" style="width:110px;font-family:var(--font-mono);font-size:12px" />
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btn-reverify" disabled>
+            重新验证
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="verify-banner idle" id="verify-banner">
+          <span class="verify-icon" id="verify-icon">🔌</span>
+          <div>
+            <div id="verify-msg">未连接</div>
+            <div class="verify-detail" id="verify-detail">连接设备后将自动发送握手命令并验证响应</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Terminal card -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="2" width="14" height="12" rx="2"/>
+            <polyline points="4,6 7,8 4,10"/>
+          </svg>
+          数据终端
+        </span>
+        <div style="display:flex;gap:6px">
+          <div class="tog-group">
+            <button class="tog-btn" id="tog-hex">HEX</button>
+            <button class="tog-btn active" id="tog-ts">时间戳</button>
+            <button class="tog-btn active" id="tog-scroll">自动滚动</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="btn-clear">清空</button>
+        </div>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:10px">
+        <div class="term-out" id="term-out"></div>
+        <div class="stats-bar">
+          <span class="stat-item">RX <span class="sv rx" id="stat-rx">0 B</span></span>
+          <span class="stat-item">TX <span class="sv tx" id="stat-tx">0 B</span></span>
+          <span class="stat-item">状态 <span class="sv" id="stat-conn">未连接</span></span>
+        </div>
+        <div class="send-area">
+          <div class="send-wrap">
+            <input class="send-input" type="text" id="send-input" placeholder="输入发送内容，回车发送…" />
+          </div>
+          <select style="width:90px" id="send-eol">
+            <option value="\r\n">CR+LF</option>
+            <option value="\n">LF</option>
+            <option value="\r">CR</option>
+            <option value="none">无</option>
+          </select>
+          <button class="btn btn-primary" id="btn-send">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+              <line x1="2" y1="8" x2="14" y2="8"/>
+              <polyline points="10,4 14,8 10,12"/>
+            </svg>
+            发送
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-terminal -->
+
+  <!-- ── TAB: 参数控制 ── -->
+  <div class="tab-pane" id="tab-params">
+
+    <div class="alert alert-info">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="8" cy="8" r="7"/><line x1="8" y1="7" x2="8" y2="11"/>
+        <circle cx="8" cy="5" r=".5" fill="currentColor"/>
+      </svg>
+      参数控制通过串口发送指令读取/写入设备参数。请先在"串口终端"页连接并验证设备。
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">设备参数</span>
+        <button class="btn btn-secondary btn-sm" onclick="sendCommand('GET_ALL')">查询全部</button>
+      </div>
+      <div class="card-body">
+        <div class="params-grid">
+
+          <!-- Param: 采样频率 -->
+          <div class="param-card">
+            <div class="param-hd">
+              <span class="param-name">采样频率</span>
+              <span class="ptag rw">RW</span>
+            </div>
+            <p class="param-desc">ADC 采样频率 (Hz)</p>
+            <div class="param-val">
+              <span id="pval-freq">—</span>
+              <span class="punit">Hz</span>
+            </div>
+            <div class="param-ctrl">
+              <input type="number" id="pinp-freq" placeholder="1000" min="1" max="1000000" />
+              <button class="btn btn-primary btn-sm"
+                      onclick="sendCommand('SET FREQ=' + document.getElementById('pinp-freq').value)">设置</button>
+              <button class="btn btn-ghost btn-sm"
+                      onclick="sendCommand('GET FREQ')">查询</button>
+            </div>
+          </div>
+
+          <!-- Param: 增益 -->
+          <div class="param-card">
+            <div class="param-hd">
+              <span class="param-name">放大增益</span>
+              <span class="ptag rw">RW</span>
+            </div>
+            <p class="param-desc">信号放大倍数</p>
+            <div class="param-val">
+              <span id="pval-gain">—</span>
+              <span class="punit">×</span>
+            </div>
+            <div class="range-wrap">
+              <input type="range" id="pinp-gain" min="1" max="128" value="1"
+                     data-display="pval-gain"
+                     oninput="document.getElementById('pval-gain').textContent=this.value" />
+              <div class="range-labels"><span>1×</span><span>128×</span></div>
+            </div>
+            <div class="param-ctrl">
+              <button class="btn btn-primary btn-sm" style="flex:1"
+                      onclick="sendCommand('SET GAIN=' + document.getElementById('pinp-gain').value)">设置增益</button>
+              <button class="btn btn-ghost btn-sm"
+                      onclick="sendCommand('GET GAIN')">查询</button>
+            </div>
+          </div>
+
+          <!-- Param: 触发阈值 -->
+          <div class="param-card">
+            <div class="param-hd">
+              <span class="param-name">触发阈值</span>
+              <span class="ptag rw">RW</span>
+            </div>
+            <p class="param-desc">触发电平阈值 (mV)</p>
+            <div class="param-val">
+              <span id="pval-thresh">—</span>
+              <span class="punit">mV</span>
+            </div>
+            <div class="param-ctrl">
+              <input type="number" id="pinp-thresh" placeholder="500" min="0" max="3300" />
+              <button class="btn btn-primary btn-sm"
+                      onclick="sendCommand('SET THRESH=' + document.getElementById('pinp-thresh').value)">设置</button>
+              <button class="btn btn-ghost btn-sm"
+                      onclick="sendCommand('GET THRESH')">查询</button>
+            </div>
+          </div>
+
+          <!-- Param: 输出模式 (只写) -->
+          <div class="param-card">
+            <div class="param-hd">
+              <span class="param-name">输出模式</span>
+              <span class="ptag wo">WO</span>
+            </div>
+            <p class="param-desc">数据输出格式</p>
+            <div class="param-ctrl" style="flex-direction:column;align-items:stretch">
+              <select id="pinp-mode">
+                <option value="ASCII">ASCII 文本</option>
+                <option value="HEX">十六进制</option>
+                <option value="BINARY">二进制流</option>
+              </select>
+              <button class="btn btn-primary btn-sm" style="margin-top:6px"
+                      onclick="sendCommand('SET MODE=' + document.getElementById('pinp-mode').value)">应用</button>
+            </div>
+          </div>
+
+          <!-- Param: 固件版本 (只读) -->
+          <div class="param-card">
+            <div class="param-hd">
+              <span class="param-name">固件版本</span>
+              <span class="ptag ro">RO</span>
+            </div>
+            <p class="param-desc">当前运行固件版本</p>
+            <div class="param-val">
+              <span id="pval-ver">—</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="width:100%"
+                    onclick="sendCommand('GET VER')">查询版本</button>
+          </div>
+
+          <!-- Param: 设备序列号 (只读) -->
+          <div class="param-card">
+            <div class="param-hd">
+              <span class="param-name">设备序列号</span>
+              <span class="ptag ro">RO</span>
+            </div>
+            <p class="param-desc">唯一硬件标识符</p>
+            <div class="param-val" style="font-size:12px;word-break:break-all">
+              <span id="pval-sn">—</span>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="width:100%"
+                    onclick="sendCommand('GET SN')">查询序列号</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Command log -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">指令日志</span>
+        <button class="btn btn-ghost btn-sm"
+                onclick="document.getElementById('cmd-log').innerHTML=''">清空</button>
+      </div>
+      <div class="card-body">
+        <div class="cmd-log" id="cmd-log"></div>
+      </div>
+    </div>
+
+  </div><!-- /tab-params -->
+
+  <!-- ── TAB: 固件下载 ── -->
+  <div class="tab-pane" id="tab-firmware">
+
+    <div class="alert alert-warn">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M8 1L1 13h14L8 1z"/><line x1="8" y1="6" x2="8" y2="9"/>
+        <circle cx="8" cy="11.5" r=".5" fill="currentColor"/>
+      </svg>
+      下载 UF2 固件后，按住 BOOTSEL 键（或 BOOT 键）连接 USB，将 UF2 文件拖放到出现的 USB 大容量存储设备中即可完成刷写。
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">固件版本列表</span>
+        <div class="fw-search">
+          <input type="text" id="fw-search" placeholder="搜索版本…" style="width:180px" />
+        </div>
+      </div>
+      <div class="card-body" style="padding:0;overflow-x:auto">
+        <table class="fw-table">
+          <thead>
+            <tr>
+              <th>版本号</th>
+              <th>硬件平台</th>
+              <th>发布日期</th>
+              <th>文件大小</th>
+              <th>更新内容</th>
+              <th>下载</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="ver-badge">v1.0.0</span>
+                <span class="latest-tag">最新</span>
+              </td>
+              <td><span class="hw-tag hw-rp2040">RP2040</span></td>
+              <td class="fdate">2025-01-01</td>
+              <td class="fsize">—</td>
+              <td class="flog">
+                <ul>
+                  <li>初始发布版本</li>
+                  <li>Web Serial API 握手验证</li>
+                  <li>ADC 数据采集与串口输出</li>
+                  <li>参数读写命令支持</li>
+                </ul>
+              </td>
+              <td>
+                <a class="dl-btn" href="firmware/PIVOTECH_RP2040_v1.0.0.uf2" download>
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M8 1v9M5 7l3 3 3-3"/>
+                    <path d="M2 13h12"/>
+                  </svg>
+                  UF2
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- UF2 flashing guide -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">UF2 刷写指南</span>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-card-title">① 进入 Bootloader 模式</div>
+            <ul>
+              <li><strong>RP2040（Pico）：</strong>按住 BOOTSEL 键，再连接 USB</li>
+              <li><strong>STM32：</strong>按住 BOOT0 键，再连接 USB 或上电</li>
+              <li><strong>ESP32-S2/S3：</strong>按住 BOOT 键，再按 RST 键</li>
+            </ul>
+          </div>
+          <div class="info-card">
+            <div class="info-card-title">② 复制固件</div>
+            <p>设备将显示为 USB 大容量存储设备（如 <kbd>RPI-RP2</kbd>）。将下载的 <kbd>.uf2</kbd> 文件直接拖放到该驱动器中。</p>
+          </div>
+          <div class="info-card">
+            <div class="info-card-title">③ 验证</div>
+            <p>刷写完成后设备将自动重启。返回"串口终端"页，选择正确波特率（默认 115200），点击"连接串口"，页面将自动发送握手命令验证设备。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-firmware -->
+
+  <!-- ── TAB: 关于 ── -->
+  <div class="tab-pane" id="tab-about">
+    <div class="info-grid">
+
+      <div class="info-card">
+        <div class="info-card-title">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="7"/><line x1="8" y1="7" x2="8" y2="11"/>
+            <circle cx="8" cy="5" r=".5" fill="currentColor"/>
+          </svg>
+          项目简介
+        </div>
+        <p>PIVOTECH 是一个针对嵌入式平台的通用快速调试检测器网页工具。用户无需安装任何软件，直接在浏览器中打开 GitHub Pages 静态网页即可使用。</p>
+        <br/>
+        <p>通过 <strong>Web Serial API</strong> 与硬件进行通信，支持数据读取、参数控制和设备验证。</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <polyline points="4,6 8,2 12,6"/><line x1="8" y1="2" x2="8" y2="11"/>
+            <path d="M2 13h12"/>
+          </svg>
+          核心功能
+        </div>
+        <ul class="feat-list">
+          <li><span class="feat-icon">✓</span> Web Serial API 串口通信</li>
+          <li><span class="feat-icon">✓</span> 握手命令 + 响应验证，自动识别设备</li>
+          <li><span class="feat-icon">✓</span> 实时数据终端（ASCII / HEX 切换）</li>
+          <li><span class="feat-icon">✓</span> 参数读写控制面板</li>
+          <li><span class="feat-icon">✓</span> 历史 UF2 固件版本下载</li>
+          <li><span class="feat-icon">✓</span> 纯静态网页，无需后端</li>
+        </ul>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="2" width="12" height="12" rx="2"/>
+            <line x1="5" y1="8" x2="11" y2="8"/>
+            <line x1="8" y1="5" x2="8" y2="11"/>
+          </svg>
+          设备握手协议
+        </div>
+        <p>连接串口后，网页自动发送握手命令（默认 <kbd>PIVOTECH_ID\r\n</kbd>），等待设备响应中包含预期标识符（默认 <kbd>PIVOTECH</kbd>）。</p>
+        <br/>
+        <p>握手命令和期望响应均可在"串口终端"页自定义，以适配不同固件版本。</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card-title">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V6L9 2z"/>
+            <polyline points="9,2 9,6 13,6"/>
+          </svg>
+          浏览器支持
+        </div>
+        <ul>
+          <li>✅ Google Chrome 89+</li>
+          <li>✅ Microsoft Edge 89+</li>
+          <li>✅ Opera 75+</li>
+          <li>❌ Firefox（不支持 Web Serial API）</li>
+          <li>❌ Safari（不支持 Web Serial API）</li>
+        </ul>
+        <br/>
+        <p style="font-size:12px">需要在 HTTPS 或 <kbd>localhost</kbd> 环境下运行。</p>
+      </div>
+
+    </div>
+  </div><!-- /tab-about -->
+
+</main>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer>
+  <span>PIVOTECH — 嵌入式通用快速调试检测器</span>
+  <span>
+    <a href="https://github.com/Conductance-lab/PIVOTECH" target="_blank" rel="noopener">GitHub</a>
+    &nbsp;·&nbsp;
+    Web Serial API &nbsp;·&nbsp;
+    MIT License
+  </span>
+</footer>
+
+<script src="js/serial.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
