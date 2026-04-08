@@ -1,1 +1,536 @@
-<h1>welcome to test page</h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIVOTECH Serial Communicator</title>
+  
+  <!-- Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- Element Plus -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/theme-chalk/dark/css-vars.css" />
+  <script src="https://unpkg.com/element-plus"></script>
+  
+  <style>
+    /* CSS Variables for Auto Theme */
+    :root {
+      --bg-color: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-color: #303133;
+    }
+    html.dark {
+      --bg-color: #141414;
+      --card-bg: #1d1e1f;
+      --text-color: #E5EAF3;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+      overflow: hidden; /* Prevent scroll bars, pure scale */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+      transition: background-color 0.3s;
+    }
+
+    /* Fixed resolution container for scale transformation */
+    #scale-container {
+      width: 1200px;
+      height: 750px;
+      background-color: var(--card-bg);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      overflow: hidden; /* Contains children */
+      transform-origin: center center;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .header {
+      padding: 20px 30px;
+      border-bottom: 1px solid var(--el-border-color-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      background: linear-gradient(120deg, #409EFF, #67C23A);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      display: flex;
+      gap: 30px;
+      height: calc(100% - 130px);
+    }
+
+    .left-panel {
+      flex: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .right-panel {
+      flex: 6;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Minimalist Terminal styling */
+    .terminal-window {
+      flex: 1;
+      background-color: #1e1e1e;
+      color: #a6e22e;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-y: auto;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    .terminal-line {
+      margin: 4px 0;
+      line-height: 1.4;
+    }
+    .line-rx { color: #66d9ef; font-weight: normal; }
+    .line-tx { color: #fd971f; font-weight: normal; }
+    .line-sys { color: #888888; font-style: italic; }
+    .line-success { color: #a6e22e; font-weight: bold; }
+    .line-error { color: #f92672; font-weight: bold; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    
+    .status-disconnected {
+      background-color: var(--el-color-info-light-9);
+      color: var(--el-color-info);
+    }
+    .status-connected {
+      background-color: var(--el-color-success-light-9);
+      color: var(--el-color-success);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div id="scale-container" :style="scaleStyle">
+    <div class="header">
+      <div class="header-title">PIVOTECH Serial Terminal</div>
+      <div style="display: flex; align-items: center; gap: 20px;">
+        <div :class="['status-badge', isConnected ? 'status-connected' : 'status-disconnected']">
+          <div class="status-dot"></div>
+          {{ isConnected ? '已连接 / Connected' : '未连接 / Disconnected' }}
+        </div>
+        <!-- Theme Switcher -->
+        <el-switch
+          v-model="isDarkMode"
+          inline-prompt
+          active-text="夜间"
+          inactive-text="日间"
+          @change="toggleThemeManual"
+        />
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="left-panel">
+        <el-card shadow="hover" body-style="padding: 20px;">
+          <template #header>
+            <div style="font-weight: bold; font-size: 16px;">
+              连接设置 / Connection
+            </div>
+          </template>
+          <el-form label-position="top">
+            <el-form-item label="波特率 (Baud Rate)">
+              <el-select v-model="baudRate" style="width: 100%;">
+                <el-option v-for="rate in baudRates" :key="rate" :label="rate" :value="rate" />
+              </el-select>
+            </el-form-item>
+            <el-button 
+              :type="isConnected ? 'danger' : 'primary'" 
+              style="width: 100%; margin-top: 10px;" 
+              @click="toggleConnection"
+              size="large">
+              {{ isConnected ? '断开设备 (Disconnect)' : '连接设备 (Connect)' }}
+            </el-button>
+          </el-form>
+        </el-card>
+
+        <el-card shadow="hover" body-style="padding: 20px;" style="flex: 1;">
+          <template #header>
+            <div style="font-weight: bold; font-size: 16px;">
+              设备验证 / Handshake
+            </div>
+          </template>
+          <div style="color: var(--el-text-color-secondary); font-size: 13px; margin-bottom: 20px; line-height: 1.5;">
+            发送如下握手指令至设备，若设备成功响应期望内容，则视为工作正常。
+          </div>
+          <el-form label-position="top" size="default">
+            <el-form-item label="发送指令 (Tx)">
+              <el-input v-model="handshakeTx" placeholder="例：PING" />
+            </el-form-item>
+            <el-form-item label="期望响应 (Expected Rx)">
+              <el-input v-model="handshakeRx" placeholder="例：PONG" />
+            </el-form-item>
+            <el-button 
+              type="success" 
+              style="width: 100%;" 
+              :disabled="!isConnected || isVerifying"
+              @click="autoVerifyDevice"
+              :loading="isVerifying"
+              size="large">
+              马上验证 (Verify Now)
+            </el-button>
+          </el-form>
+        </el-card>
+      </div>
+
+      <div class="right-panel">
+        <div class="terminal-window" ref="terminalRef">
+          <div v-for="(log, idx) in logs" :key="idx" :class="['terminal-line', `line-${log.type}`]">
+            <span style="color: #666; user-select: none;">[{{ log.time }}]</span> {{ log.text }}
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; align-items: flex-start;">
+          <el-input 
+            v-model="inputData" 
+            placeholder="在下方输入..." 
+            @keyup.enter="sendData"
+            size="large"
+            style="flex: 1;"
+          >
+            <template #append>
+              <el-checkbox v-model="appendCRLF" label="加 \r\n" style="margin-right:-10px;" />
+            </template>
+          </el-input>
+          <el-button type="primary" size="large" @click="sendData" :disabled="!isConnected">发送 TX</el-button>
+          <el-button size="large" @click="clearLogs">清空日志</el-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { createApp, ref, onMounted, onUnmounted, nextTick, watch } = Vue;
+
+  const app = createApp({
+    setup() {
+      // ==== Scale feature (Without Layout Reflow) ====
+      const scaleStyle = ref({ transform: 'scale(1)' });
+      const updateScale = () => {
+        const TARGET_WIDTH = 1200;
+        const TARGET_HEIGHT = 750;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        // Calculation ensures we always fit within the screen with 10% padding
+        const scaleX = (windowWidth * 0.95) / TARGET_WIDTH;
+        const scaleY = (windowHeight * 0.95) / TARGET_HEIGHT;
+        const scale = Math.min(scaleX, scaleY);
+        scaleStyle.value = { transform: `scale(${scale})` };
+      };
+
+      // ==== Light/Dark Theme Switching ====
+      const isDarkMode = ref(false);
+      const applyTheme = (isDark) => {
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      };
+
+      const toggleThemeManual = (val) => {
+        applyTheme(val);
+      };
+
+      const matchMedia = window.matchMedia('(prefers-color-scheme: dark)');
+      isDarkMode.value = matchMedia.matches;
+      applyTheme(isDarkMode.value);
+
+      matchMedia.addEventListener('change', e => {
+        isDarkMode.value = e.matches;
+        applyTheme(e.matches);
+      });
+
+      // ==== Web Serial Data ====
+      const isConnected = ref(false);
+      const baudRate = ref(115200);
+      const baudRates = [9600, 19200, 38400, 57600, 115200, 256000, 460800, 921600];
+      const appendCRLF = ref(true);
+      const inputData = ref('HELLO');
+      const logs = ref([]);
+      const terminalRef = ref(null);
+
+      // Serial internal variables
+      let port = null;
+      let reader = null;
+      let writer = null;
+      let keepReading = true;
+
+      const addLog = (text, type = 'sys') => {
+        const now = new Date();
+        const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}.${now.getMilliseconds().toString().padStart(3, '0')}`;
+        logs.value.push({ time, text, type });
+        // Max 500 lines to avoid perf issues
+        if (logs.value.length > 500) logs.value.shift();
+        
+        nextTick(() => {
+          if (terminalRef.value) {
+            terminalRef.value.scrollTop = terminalRef.value.scrollHeight;
+          }
+        });
+      };
+
+      const clearLogs = () => {
+        logs.value = [];
+      };
+
+      // ==== Verification Logic ====
+      const handshakeTx = ref('AT');
+      const handshakeRx = ref('OK');
+      const isVerifying = ref(false);
+      
+      let currentRxBuffer = ''; 
+
+      const processRxData = (str) => {
+        // Splitting by lines safely just to display nicer.
+        const pieces = str.split("\n");
+        for (let i = 0; i < pieces.length; i++) {
+          if (pieces[i].trim() !== '') {
+             addLog(`[RX] ${pieces[i].trim()}`, 'rx');
+          }
+        }
+
+        // Add to rxBuffer to search for our Handshake token
+        if (isVerifying.value) {
+          currentRxBuffer += str;
+          if (currentRxBuffer.includes(handshakeRx.value)) {
+            // Found expectations!
+            isVerifying.value = false;
+            addLog(`✅ 验证成功! 接收到期望回应: [${handshakeRx.value}]`, 'success');
+            ElementPlus.ElMessage({ message: '设备成功握手连接！', type: 'success', duration: 4000 });
+            currentRxBuffer = '';
+          }
+        }
+      };
+
+      const autoVerifyDevice = async () => {
+        if (!isConnected.value || isVerifying.value) return;
+        
+        const txCmd = handshakeTx.value;
+        const expectedRx = handshakeRx.value;
+        
+        if (!txCmd || !expectedRx) {
+          ElementPlus.ElMessage.warning('请确保 Tx 和 Rx 要求非空!');
+          return;
+        }
+
+        currentRxBuffer = '';
+        isVerifying.value = true;
+        
+        try {
+          addLog(`[Auto-Verify] 开始发送: "${txCmd}", 期待含: "${expectedRx}"`, 'sys');
+          await writeToSerial(txCmd + (appendCRLF.value ? '\r\n' : ''));
+          addLog(`[TX] ${txCmd}`, 'tx');
+          
+          // 3 second timeout for verifying
+          setTimeout(() => {
+            if (isVerifying.value) {
+              isVerifying.value = false;
+              addLog(`❌ 验证失败! 超时未检测到指定内容: [${expectedRx}]`, 'error');
+              ElementPlus.ElMessage.error('设备验证超时无响应!');
+            }
+          }, 3000); 
+
+        } catch (error) {
+          isVerifying.value = false;
+          addLog(`TX 发生错误: ${error.message}`, 'error');
+          ElementPlus.ElMessage.error('发送错误');
+        }
+      };
+
+      // ==== Sending / Reading Streams ====
+      const writeToSerial = async (dataString) => {
+        if (!writer) return;
+        await writer.write(dataString);
+      };
+
+      const sendData = async () => {
+        if (!isConnected.value || !inputData.value) return;
+        
+        let payload = inputData.value;
+        if (appendCRLF.value) {
+          payload += '\r\n';
+        }
+        
+        try {
+          await writeToSerial(payload);
+          addLog(`[TX] ${inputData.value}`, 'tx');
+          inputData.value = ''; // Auto clear
+        } catch (e) {
+          addLog(`Send error: ${e.message}`, 'error');
+        }
+      };
+
+      const readLoop = async () => {
+        while (port.readable && keepReading) {
+          // Wrap with TextDecoder stream
+          const textDecoderStream = new window.TextDecoderStream();
+          const readableStreamClosed = port.readable.pipeTo(textDecoderStream.writable);
+          reader = textDecoderStream.readable.getReader();
+
+          try {
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) {
+                // Reader canceled
+                break;
+              }
+              if (value) {
+                processRxData(value);
+              }
+            }
+          } catch (error) {
+            console.error('Core loop err:', error);
+          } finally {
+            reader.releaseLock();
+          }
+        }
+      };
+
+      const connectDevice = async () => {
+        if (!('serial' in navigator)) {
+          ElementPlus.ElMessage.error('您的浏览器不支持 Web Serial API。需要使用 Chrome 89+ 等最新内核并在安全环境 (HTTPS或本地HTTPS/localhost) 下运行。');
+          return;
+        }
+
+        try {
+          port = await navigator.serial.requestPort();
+          await port.open({ baudRate: baudRate.value });
+          
+          keepReading = true;
+          
+          const textEncoderStream = new window.TextEncoderStream();
+          const writableStreamClosed = textEncoderStream.readable.pipeTo(port.writable);
+          writer = textEncoderStream.writable.getWriter();
+
+          isConnected.value = true;
+          addLog(`[System] 已连入设备。波特率: ${baudRate.value}`, 'success');
+          
+          readLoop();
+        } catch (error) {
+          if (error.name === 'NotFoundError') {
+            addLog(`[System] 被用户取消。`, 'sys');
+          } else {
+            addLog(`[System] 连接失败: ${error.message}`, 'error');
+            console.error(error);
+          }
+        }
+      };
+
+      const disconnectDevice = async () => {
+        keepReading = false;
+        
+        if (reader) {
+          await reader.cancel();
+          reader = null;
+        }
+        if (writer) {
+          await writer.close();
+          writer = null;
+        }
+        if (port) {
+          await port.close();
+          port = null;
+        }
+        
+        isConnected.value = false;
+        isVerifying.value = false;
+        addLog(`[System] 断开了连接。`, 'sys');
+      };
+
+      const toggleConnection = () => {
+        if (isConnected.value) {
+          disconnectDevice();
+        } else {
+          connectDevice();
+        }
+      };
+
+      // ==== Lifecycle ====
+      onMounted(() => {
+        window.addEventListener('resize', updateScale);
+        updateScale(); // Init first scale calculation
+        
+        addLog('PIVOTECH 串口调试助手初始化完毕。', 'sys');
+        addLog('操作提醒：若非使用 GitHub Pages (HTTPS)，请确保通过 "Localhost" 或者 "HTTPS" 进行 Web 访问使 Web Serial API 生效。', 'sys');
+      });
+
+      onUnmounted(() => {
+        window.removeEventListener('resize', updateScale);
+        disconnectDevice();
+      });
+
+      return {
+        scaleStyle,
+        isDarkMode,
+        toggleThemeManual,
+        isConnected,
+        baudRate,
+        baudRates,
+        appendCRLF,
+        inputData,
+        logs,
+        terminalRef,
+        handshakeTx,
+        handshakeRx,
+        isVerifying,
+        toggleConnection,
+        sendData,
+        clearLogs,
+        autoVerifyDevice
+      };
+    }
+  });
+
+  app.use(ElementPlus);
+  app.mount('#app');
+</script>
+</body>
+</html>
