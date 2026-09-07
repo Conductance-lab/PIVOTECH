@@ -13,7 +13,7 @@ PIVOTECH 把输入状态检测、DC/PWM 输出、模块配置工具、I2C / SPI 
 | 路径 | 内容 | 说明 |
 | --- | --- | --- |
 | `index.html` | 上位机 Web APP（**发布副本**） | GitHub Pages 从仓库根发布，即开即用 |
-| `PIVOTECH_Page/` | 上位机 Web APP（**唯一源**） | 单文件 `index.html`，改动需同步到根 `index.html` |
+| `webapp/` | 上位机 Web APP（**唯一源**） | 单文件 `index.html`，改动需同步到根 `index.html` |
 | `firmware/pivotech_1.1/` | PIVOTECH 主固件源码 | 即安装包 `3.PIVOTECH.1.1.uf2`；源码目录内部版本号 `1.4.2` |
 | `firmware/debugprobe/` | DebugProbe 模式固件 | Debug Probe V2.2.3（CMSIS-DAP），硬件另一模式使用 |
 | `firmware/bootloader_t11/` | Bootloader 引导程序 | T11 引导区程序 |
@@ -34,9 +34,9 @@ PIVOTECH 把输入状态检测、DC/PWM 输出、模块配置工具、I2C / SPI 
 
 ## 目录与构建
 
-### 上位机（PIVOTECH_Page / 根 index.html）
+### 上位机（webapp / 根 index.html）
 - 纯前端单文件（Vue3 + Element Plus，内联依赖），浏览器直接打开即可；串口需 `https` 或 `localhost` 环境。
-- **同步约定**：`PIVOTECH_Page/index.html` 是唯一源；根目录 `index.html` 是发布副本。改动上位机后请将 `PIVOTECH_Page/index.html` 覆盖到根 `index.html` 再提交，保持两者一致。
+- **同步约定**：`webapp/index.html` 是唯一源；根目录 `index.html` 是发布副本。改动上位机后请将 `webapp/index.html` 覆盖到根 `index.html` 再提交，保持两者一致。
 
 ### 主固件（firmware/pivotech_1.1）
 - RP2040 / Pico SDK 2.1.1，C++17 双核。
