@@ -419,6 +419,13 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
       background: color-mix(in srgb, var(--el-color-primary) 10%, var(--el-fill-color-light));
     }
 
+    /* 预览模式标签：同款胶囊样式，主色微调以区分“进入预览”动作 */
+    .auth-product-link.is-preview {
+      border-color: var(--el-color-primary);
+      color: var(--el-color-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 8%, var(--el-fill-color-light));
+    }
+
     .auth-subtitle {
       color: var(--el-text-color-secondary);
       font-size: 14px;
@@ -3742,6 +3749,7 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
               <div class="auth-title-row">
                 <div class="auth-title">PIVOTECH</div>
                 <button class="auth-product-link" type="button" @click="openProductIntroPage">产品介绍页</button>
+                <button class="auth-product-link is-preview" type="button" @click="enterPreviewMode">预览模式</button>
               </div>
               <div class="auth-subtitle">设备终端登录验证 (System Validation)</div>
             </div>
@@ -3931,6 +3939,10 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
                 <div class="status-dot"></div>
                 {{ isConnected ? '已连接' : '未连接' }}
               </div>
+              <template v-if="previewMode">
+                <div class="status-badge status-connected">预览模式</div>
+                <el-button size="small" plain @click="exitPreviewMode">退出预览</el-button>
+              </template>
               <el-switch v-model="isDarkMode" inline-prompt active-text="深色" inactive-text="浅色"
                 @change="toggleThemeManual" />
               <details class="app-menu">
@@ -5322,6 +5334,7 @@ TE/TF：te_spi_tx(...)、tf_spi_sck(...)
         setup() {
           // ==== 容器状态 ====
           const viewPage = ref('auth'); // 'auth', 'pivotech', 'debugprobe'
+          const previewMode = ref(false); // 预览模式：未连接硬件直接浏览各页面
           const authStep = ref(0);      // 步骤0~4
           const authStatus = ref('process'); // 'process', 'wait', 'finish', 'error'
           const browserCheckError = ref(false); // 仅用于第一步浏览器兼容检查
@@ -5410,6 +5423,35 @@ TE/TF：te_spi_tx(...)、tf_spi_sck(...)
 
           const openProductIntroPage = () => {
             window.open('https://docs.conductance-lab.xyz/%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C/PIVOTECH%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C', '_blank', 'noopener');
+          };
+
+          // ==== 预览模式（无需连接硬件，直接浏览并切换各功能页面） ====
+          const enterPreviewMode = () => {
+            if (previewMode.value || isConnectingPort.value || isConnected.value || deviceType.value) {
+              return; // 连接流程中或已有真实连接时不进入预览
+            }
+            previewMode.value = true;
+            resetPivotechWorkspaceState();
+            viewPage.value = 'pivotech'; // watch(viewPage) 会自动揭示工作区
+          };
+
+          const exitPreviewMode = () => {
+            if (!previewMode.value) {
+              return;
+            }
+            previewMode.value = false;
+            resetPivotechWorkspaceState();
+            if (pivotechWorkspaceReadyTimer) {
+              clearTimeout(pivotechWorkspaceReadyTimer);
+              pivotechWorkspaceReadyTimer = null;
+            }
+            pivotechWorkspaceReady.value = false;
+            viewPage.value = 'auth';
+            authStep.value = 1;
+            authStatus.value = 'wait';
+            if (typeof showDefaultConnectHint === 'function') {
+              showDefaultConnectHint();
+            }
           };
 
           const closeHeaderMenuOnOutsideClick = (event) => {
@@ -12015,6 +12057,9 @@ TE/TF：te_spi_tx(...)、tf_spi_sck(...)
             applyPivotechBaudPreset,
             setPivotechActivePage,
             pivotechWorkspaceReady,
+            previewMode,
+            enterPreviewMode,
+            exitPreviewMode,
             updatePivotechI2cLayout,
             updatePivotechI2cSetFreq,
             requestPivotechI2cDeviceList,
