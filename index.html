@@ -419,13 +419,6 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
       background: color-mix(in srgb, var(--el-color-primary) 10%, var(--el-fill-color-light));
     }
 
-    /* 预览模式标签：同款胶囊样式，主色微调以区分“进入预览”动作 */
-    .auth-product-link.is-preview {
-      border-color: var(--el-color-primary);
-      color: var(--el-color-primary);
-      background: color-mix(in srgb, var(--el-color-primary) 8%, var(--el-fill-color-light));
-    }
-
     .auth-subtitle {
       color: var(--el-text-color-secondary);
       font-size: 14px;
@@ -3749,7 +3742,7 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
               <div class="auth-title-row">
                 <div class="auth-title">PIVOTECH</div>
                 <button class="auth-product-link" type="button" @click="openProductIntroPage">产品介绍页</button>
-                <button class="auth-product-link is-preview" type="button" @click="enterPreviewMode">预览模式</button>
+                <button class="auth-product-link" type="button" @click="enterPreviewMode">预览模式</button>
               </div>
               <div class="auth-subtitle">设备终端登录验证 (System Validation)</div>
             </div>
@@ -3935,14 +3928,11 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
             <div class="header-title">PIVOTECH Web APP</div>
             <div class="header-actions">
               <div :class="['status-badge', 'pivo-comm-level', pivotechCommVoltageStale ? 'status-disconnected' : 'status-connected']">通信电平：{{ pivotechCommVoltageText }}</div>
-              <div :class="['status-badge', isConnected ? 'status-connected' : 'status-disconnected']">
+              <div :class="['status-badge', previewMode ? 'status-connected' : (isConnected ? 'status-connected' : 'status-disconnected')]">
                 <div class="status-dot"></div>
-                {{ isConnected ? '已连接' : '未连接' }}
+                {{ previewMode ? '预览模式' : (isConnected ? '已连接' : '未连接') }}
               </div>
-              <template v-if="previewMode">
-                <div class="status-badge status-connected">预览模式</div>
-                <el-button size="small" plain @click="exitPreviewMode">退出预览</el-button>
-              </template>
+              <el-button v-if="previewMode" size="small" plain @click="exitPreviewMode">退出预览</el-button>
               <el-switch v-model="isDarkMode" inline-prompt active-text="深色" inactive-text="浅色"
                 @change="toggleThemeManual" />
               <details class="app-menu">
