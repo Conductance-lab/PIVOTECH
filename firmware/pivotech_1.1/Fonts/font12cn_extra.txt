@@ -1,0 +1,4 @@
+# Add extra non-ASCII characters here when they do not appear in source code.
+# Typical use: Chinese titles loaded from external config text.
+# Example:
+# 阈值频段波形校准

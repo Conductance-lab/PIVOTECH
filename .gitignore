@@ -1,0 +1,34 @@
+# Python 缓存 / 虚拟环境
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# CMake / Pico-SDK / Ninja 构建产物
+build/
+**/build/
+.cmake/
+compile_commands.json
+
+# Visual Studio 缓存与产物（EXE/SEXE1 等内含 .vs）
+.vs/
+**/.vs/
+ipch/
+*.VC.db
+**/Debug/
+**/Release/
+**/x64/
+**/Win32/
+
+# 本地保留、不入库（整理仓库时明确排除）
+/docs/
+/aitool/
+/电商资料/
+
+# 编辑器 / 系统杂项
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.log
