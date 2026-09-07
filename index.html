@@ -297,6 +297,57 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
       outline: none;
     }
 
+    /* 深浅色切换按钮：与右上角三点菜单同尺寸同风格的图标按钮，点击直接切换（太阳/月亮） */
+    .theme-toggle-btn {
+      flex: 0 0 auto;
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--el-border-color);
+      border-radius: 6px;
+      background: var(--el-fill-color-light);
+      color: var(--el-text-color-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+      transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .theme-toggle-btn svg {
+      width: 13px;
+      height: 13px;
+      display: block;
+    }
+
+    .theme-toggle-btn:hover,
+    .theme-toggle-btn:focus-visible {
+      border-color: var(--el-color-primary);
+      color: var(--el-color-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 10%, var(--el-fill-color-light));
+      outline: none;
+    }
+
+    /* 水平对齐兜底：确保深浅按钮与三点菜单同一水平线、同尺寸同风格 */
+    .topbar-actions,
+    .header-actions {
+      align-items: center !important;
+    }
+
+    .app-menu {
+      display: flex;
+      align-items: center;
+    }
+
+    .theme-toggle-btn,
+    .app-menu-trigger {
+      box-sizing: border-box;
+      width: 20px;
+      height: 20px;
+      margin-top: auto;
+      margin-bottom: auto;
+    }
+
     .app-menu-dropdown {
       position: absolute;
       top: calc(100% + 8px);
@@ -3767,8 +3818,25 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
               <div class="auth-subtitle">设备终端登录验证 (System Validation)</div>
             </div>
             <div class="topbar-actions">
-              <el-switch v-model="isDarkMode" inline-prompt active-text="深色" inactive-text="浅色"
-                @change="toggleThemeManual"></el-switch>
+              <button type="button" class="theme-toggle-btn"
+                :title="isDarkMode ? '切换到浅色模式' : '切换到深色模式'"
+                :aria-label="isDarkMode ? '切换到浅色' : '切换到深色'"
+                @click="toggleThemeQuick">
+                <svg v-show="isDarkMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <line x1="12" y1="2" x2="12" y2="4"></line>
+                  <line x1="12" y1="20" x2="12" y2="22"></line>
+                  <line x1="4.9" y1="4.9" x2="6.3" y2="6.3"></line>
+                  <line x1="17.7" y1="17.7" x2="19.1" y2="19.1"></line>
+                  <line x1="2" y1="12" x2="4" y2="12"></line>
+                  <line x1="20" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.9" y1="19.1" x2="6.3" y2="17.7"></line>
+                  <line x1="17.7" y1="6.3" x2="19.1" y2="4.9"></line>
+                </svg>
+                <svg v-show="!isDarkMode" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </button>
               <details class="app-menu">
                 <summary class="app-menu-trigger" aria-label="打开菜单" title="菜单">
                   <span></span>
@@ -3953,8 +4021,25 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
                 {{ previewMode ? '预览模式' : (isConnected ? '已连接' : '未连接') }}
               </div>
               <button v-if="previewMode" class="pivo-preview-exit-btn" type="button" @click="exitPreviewMode">退出预览</button>
-              <el-switch v-model="isDarkMode" inline-prompt active-text="深色" inactive-text="浅色"
-                @change="toggleThemeManual"></el-switch>
+              <button type="button" class="theme-toggle-btn"
+                :title="isDarkMode ? '切换到浅色模式' : '切换到深色模式'"
+                :aria-label="isDarkMode ? '切换到浅色' : '切换到深色'"
+                @click="toggleThemeQuick">
+                <svg v-show="isDarkMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <line x1="12" y1="2" x2="12" y2="4"></line>
+                  <line x1="12" y1="20" x2="12" y2="22"></line>
+                  <line x1="4.9" y1="4.9" x2="6.3" y2="6.3"></line>
+                  <line x1="17.7" y1="17.7" x2="19.1" y2="19.1"></line>
+                  <line x1="2" y1="12" x2="4" y2="12"></line>
+                  <line x1="20" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.9" y1="19.1" x2="6.3" y2="17.7"></line>
+                  <line x1="17.7" y1="6.3" x2="19.1" y2="4.9"></line>
+                </svg>
+                <svg v-show="!isDarkMode" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </button>
               <details class="app-menu">
                 <summary class="app-menu-trigger" aria-label="打开菜单" title="菜单">
                   <span></span>
@@ -5059,8 +5144,25 @@ let YS=`_Mousewheel`,XS=function(e,t){if(e&&e.addEventListener){ZS(e);let n=func
           <div class="header">
             <div class="header-title">DebugProbe @PIVOTECH</div>
             <div class="header-actions">
-              <el-switch v-model="isDarkMode" inline-prompt active-text="深色" inactive-text="浅色"
-                @change="toggleThemeManual"></el-switch>
+              <button type="button" class="theme-toggle-btn"
+                :title="isDarkMode ? '切换到浅色模式' : '切换到深色模式'"
+                :aria-label="isDarkMode ? '切换到浅色' : '切换到深色'"
+                @click="toggleThemeQuick">
+                <svg v-show="isDarkMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <line x1="12" y1="2" x2="12" y2="4"></line>
+                  <line x1="12" y1="20" x2="12" y2="22"></line>
+                  <line x1="4.9" y1="4.9" x2="6.3" y2="6.3"></line>
+                  <line x1="17.7" y1="17.7" x2="19.1" y2="19.1"></line>
+                  <line x1="2" y1="12" x2="4" y2="12"></line>
+                  <line x1="20" y1="12" x2="22" y2="12"></line>
+                  <line x1="4.9" y1="19.1" x2="6.3" y2="17.7"></line>
+                  <line x1="17.7" y1="6.3" x2="19.1" y2="4.9"></line>
+                </svg>
+                <svg v-show="!isDarkMode" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              </button>
               <details class="app-menu">
                 <summary class="app-menu-trigger" aria-label="打开菜单" title="菜单">
                   <span></span>
@@ -5429,6 +5531,12 @@ TE/TF：te_spi_tx(...)、tf_spi_sck(...)
            */
           const toggleThemeManual = (val) => {
             applyTheme(val);
+          };
+
+          // 顶部主题按钮：太阳/月亮一键切换（点击直接切换，无需滑动）
+          const toggleThemeQuick = () => {
+            isDarkMode.value = !isDarkMode.value;
+            applyTheme(isDarkMode.value);
           };
 
           const openProductIntroPage = () => {
@@ -11957,6 +12065,7 @@ TE/TF：te_spi_tx(...)、tf_spi_sck(...)
             scaleStyle,
             isDarkMode,
             toggleThemeManual,
+            toggleThemeQuick,
             openProductIntroPage,
             isConnected,
             pivotechCommVoltageText,
